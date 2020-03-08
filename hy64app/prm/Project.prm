@@ -1,0 +1,75 @@
+NAMES END 
+
+SEGMENTS  
+      RAM_NO_INIT0  =  NO_INIT        0x3000  TO  0x3003;  /*Boot */
+      RAM           = READ_WRITE     0x3004 TO   0x3FF0;
+      RAM_NO_INIT  =  NO_INIT        0x3FF1  TO  0x3FFF;
+
+      DFLASH        = READ_ONLY   0x010400 TO 0x0113FF;
+
+// non-paged FLASHs 
+
+//    VECTOR_SEG    = READ_ONLY     0x1400 TO   0x14FF;  // 256B for relocated vector table    
+
+      ROM_1500      = READ_ONLY     0x1500 TO   0x2FFF;  //6K_ avoid relocated vector table from 0x1400~0xFF00
+      ROM_4000      = READ_ONLY     0x4000 TO   0x7FFF;  //16K
+//    ROM_C000      = READ_ONLY     0xC000 TO   0xFEFF;   
+      ROM_C000      = READ_ONLY     0xC000 TO   0xEFFF;  // 12K_avoid 4K protected Flash for bootloader   
+
+// paged FLASH:                     0x8000 TO   0xBFFF; addressed through PPAGE 
+      PAGE_0C       = READ_ONLY   0x0C8000 TO 0x0C93FF;  //5K
+
+//    PAGE_0C_B000  = READ_ONLY   0x0CB000 TO 0x0CBFFF;
+      BOOT_PAGE     = READ_ONLY   0x0CB000 TO 0x0CBFFF;  //4k paged flash for main
+      
+      PAGE_0E       = READ_ONLY   0x0E8000 TO 0x0EBFFF;  //16K
+END
+
+PLACEMENT /* here all predefined and user segments are placed into the SEGMENTS defined above. */
+      _PRESTART,              /* Used in HIWARE format: jump to _Startup at the code start */
+      STARTUP,                /* startup data structures */
+      ROM_VAR,                /* constant variables */
+      STRINGS,                /* string literals */
+      VIRTUAL_TABLE_SEGMENT,  /* C++ virtual table segment */
+      NON_BANKED,             /* runtime routines which must not be banked */
+      COPY                    /* copy down information: how to initialize variables */
+                              /* in case you want to use ROM_4000 here as well, make sure
+                                 that all files (incl. library files) are compiled with the
+                                 option: -OnB=b */
+                        INTO  ROM_C000   /*, ROM_1500*/ /*, ROM_4000*/;  /*S301更改  存储const变量*/
+                          
+
+      DEFAULT_ROM       INTO  PAGE_0C,ROM_1500,ROM_4000, /*PAGE_0C_B000,*/ PAGE_0E/*,ROM_4000*/; /*程序*/
+      
+      BOOT_SEG          INTO  BOOT_PAGE;    // make sure app() locates at start of BOOT_PAGE!!!
+
+      SSTACK,                 /* allocate stack first to avoid overwriting variables on overflow */
+      DEFAULT_RAM       INTO  RAM;
+      DATA_PERSISTENT    INTO  RAM_NO_INIT;
+      BOOT_PERSISTENT    INTO   RAM_NO_INIT0;//记录BOTloader标记
+END
+
+ENTRIES 
+
+END
+
+STACKSIZE 0x100
+
+VECTOR 0  _Startup 
+
+VECTOR ADDRESS 0x14F0  T_clock
+VECTOR ADDRESS 0x14A2  TIM1CH6_ISR
+VECTOR ADDRESS 0x14A4  TIM1CH5_ISR
+VECTOR ADDRESS 0x14A6  TIM1CH4_ISR
+VECTOR ADDRESS 0x14AE  TIM1CH0_ISR
+VECTOR ADDRESS 0x149E  TIM1OVER_ISR
+VECTOR ADDRESS 0x14B8  FSL_ISR_Handler
+VECTOR ADDRESS 0x14B2  Can_receive_ISR
+
+VECTOR ADDRESS 0x14B6  CAN_WakeUp
+VECTOR ADDRESS 0x14E2  TIM0CH6_ISR
+VECTOR ADDRESS 0x14EA  T0_2_ISR
+VECTOR ADDRESS 0x14D6  Lin_receive_ISR
+VECTOR ADDRESS 0x14FA  Vcop_ISR
+VECTOR ADDRESS 0x14FC  Vclkmon_ISR
+VECTOR ADDRESS 0x148A  Vlvi_ISR

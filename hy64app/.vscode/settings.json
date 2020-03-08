@@ -1,0 +1,9 @@
+{
+    "files.associations": {
+        "eve_hal.h": "c",
+        "ui.h": "c",
+        "main.h": "c",
+        "ui_bitmap.h": "c",
+        "eve_gpu.h": "c"
+    }
+}
