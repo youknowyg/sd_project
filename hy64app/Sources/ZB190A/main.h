@@ -80,7 +80,7 @@ typedef struct
 	
 }SmControlStu;
 
-
+void DelayXms(unsigned int data);
 
 
   		      

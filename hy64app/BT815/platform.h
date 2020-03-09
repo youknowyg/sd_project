@@ -93,7 +93,8 @@
 /*----------------------------------------------------------------------------*/
 #if defined(UI_D_BITMAP)
 #define DEF_BT81X
-#define LCD_WVGA
+//#define LCD_WVGA
+#define LCD_QVGA
 #define DEF_CAP_NONMULTI
 
 #if (defined(FT9XXEV) || \

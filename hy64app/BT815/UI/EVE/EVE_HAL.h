@@ -34,6 +34,8 @@ typedef unsigned long     	FTU32;
 
 #define QVGA_WIDTH  320
 #define QVGA_HIGH   240
+// #define QVGA_WIDTH  240
+// #define QVGA_HIGH   320
 
 #define HVGA_WIDTH  320
 #define HVGA_HIGH   480

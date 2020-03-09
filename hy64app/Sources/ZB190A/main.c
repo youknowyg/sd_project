@@ -92,7 +92,7 @@ VECTOR ADDRESS 0x148A  Vlvi_ISR
 #define		V_CAN_PR0			PTR_PTR0
 
 
-#define		PORTH_DIRECTION		DDRH = 0x00		/* 0000 0000 */
+#define		PORTH_DIRECTION		DDRH = 0xFE		/* 0000 0000 */
 #define		MCU_I_R_GEAR_PH7	PTH_PTH7
 #define		MCU_I_LOW_GEAR_PH6	PTH_PTH6
 #define		MCU_I_REARFOG_PH5	PTH_PTH5
@@ -133,12 +133,13 @@ VECTOR ADDRESS 0x148A  Vlvi_ISR
 #define		MCU_I_HIGHBEAM_PS4	PTS_PTS4
 /* CAN通讯占用PS3 PS2 */
 #define		MCU_O_BEEP_PWM_PS1	PTS_PTS1
-#define		SMGA2_PS0			PTS_PTS0
+#define		MCU_O_TFT_POWER_PS0	PTS_PTS0
 
 
 #define		PORTV_DIRECTION		DDRV = 0xFE			/* 11111110 */
 #define		SMGA1_PV7			PTV_PTV7
 #define		MCU_O_TFT_POWER_PV6	PTV_PTV6
+#define		SMGA2_PS0			PTV_PTV4 //yg这里是临时改
 /* PV5 PV4暂时悬空 */
 #define		MCU_815_CS_PV3		PTV_PTV3
 #define		MCU_815_SCK_PV2		PTV_PTV2
@@ -146,9 +147,9 @@ VECTOR ADDRESS 0x148A  Vlvi_ISR
 #define		MCU_815_MISO_PV0	PTV_PTV0
 
 
-#define		PORTU_DIRECTION		DDRU = 0xA0			/* 10100000 */
+#define		PORTU_DIRECTION		DDRU = 0xE0			/* 10100000 */
 #define		SMGA3_PU7			PTU_PTU7
-#define		MCU_815_IO5_PU6		PTU_PTU6
+#define		MCU_P_REST			PTU_PTU6
 #define		MCU_815_PD_PU5		PTU_PTU5
 #define		MCU_815_INT			PTU_PTU4
 #define		MCU_815_IO4_PU3		PTU_PTU3
@@ -4802,14 +4803,14 @@ void init_data(void)
 	Init_Port();		/* 端口口初始化 */
 
 	
-	Init_Timer();		/* 中断初始化 */
+	//Init_Timer();		/* 中断初始化 */
     /*************************pwm****************************************/
-	Init_Pwm();
-	Init_Can();
+	//Init_Pwm();
+	//Init_Can();
     //Init_Uart();
 
-    Init_Ad();
-    Init_Eeprom_Data();
+    //Init_Ad();
+    //Init_Eeprom_Data();
 	
 
 
@@ -4837,25 +4838,28 @@ void init_data(void)
     rolling_count=0;
 	rolling_count433=0;
 	CanTxBatOver6vEn=1;
-    init_data_reset();
+    //init_data_reset();
 
 	//SMG_Driver();
-	LED_INT();
-	NXP74HC165_init();
+	//LED_INT();
+	//NXP74HC165_init();
 
 	
-	MCU_O_LED_POWER_PB1 = 1;
-	MCU_O_12V_PR4 = 1;
-	MCU_O_OILVOLT1_PA6 = 0;		/* change by zhang */
+	//MCU_O_LED_POWER_PB1 = 1;
+	//MCU_O_12V_PR4 = 1;
+	//MCU_O_OILVOLT1_PA6 = 0;		/* change by zhang */
 
-    init_smc_parameter();
+    //init_smc_parameter();
 
+	MCU_O_TFT_PWM_PP0=1;
+  	MCU_O_TFT_POWER_PS0=1;
+	LCD_Init();
     LCD_DisplayInit(); // 0.7s初始化时间
     
     //MCU_O_BLACK_LIGHT_PP1 = 1;	/* 表盘背光 */
-	MCU_O_TFT_POWER_PV6 = 1;	/* 使能TFT电源开关，调光暂时还没有做 */
+	//MCU_O_TFT_POWER_PV6 = 1;	/* 使能TFT电源开关，调光暂时还没有做 */
 	//MCU_O_TFT_PWM_PP0 = 1;
-	PWME = 0x03;	/* 使能PWM0 PWM1端口 */
+	//PWME = 0x03;	/* 使能PWM0 PWM1端口 */
     
 	
 }
@@ -4930,105 +4934,106 @@ void main(void)
 
 	for(;;)
 	{
-		if( main_sleep>2 )
-        {
-            if(MCU_I_POWER_PP6==0) //无IG输入
-            {
-				__RESET_WATCHDOG();	
-				if(main_sleep==3)
-				{
-					//asm ANDCC #0x7F; // Clear S-bit in the CCR to enable STOP instruction 
-					//asm STOP
-				} 
-			}
-			else
-            {
-                __RESET_WATCHDOG();	  
-				//immo_pro();	
-              	//init_data();//该函数内包含init_data函数  初始化main_sleep为0
-              	ig_on();
-                //EnableInterrupts;          
-            }    
-		}
-		else	//main_sleep<=2
-		{
-			__RESET_WATCHDOG();	
-            if(MCU_I_POWER_PP6==0) //无IG输入
-            {
-				__RESET_WATCHDOG();	
-				ig_off();
-			}
-			else//有IG输入
-			{
-				__RESET_WATCHDOG();
-				second_ig=second_1s;
+		LCD_DisplayProcess();
+		// if( main_sleep>2 )
+        // {
+        //     if(MCU_I_POWER_PP6==0) //无IG输入
+        //     {
+		// 		__RESET_WATCHDOG();	
+		// 		if(main_sleep==3)
+		// 		{
+		// 			//asm ANDCC #0x7F; // Clear S-bit in the CCR to enable STOP instruction 
+		// 			//asm STOP
+		// 		} 
+		// 	}
+		// 	else
+        //     {
+        //         __RESET_WATCHDOG();	  
+		// 		//immo_pro();	
+        //       	//init_data();//该函数内包含init_data函数  初始化main_sleep为0
+        //       	ig_on();
+        //         //EnableInterrupts;          
+        //     }    
+		// }
+		// else	//main_sleep<=2
+		// {
+		// 	__RESET_WATCHDOG();	
+        //     if(MCU_I_POWER_PP6==0) //无IG输入
+        //     {
+		// 		__RESET_WATCHDOG();	
+		// 		ig_off();
+		// 	}
+		// 	else//有IG输入
+		// 	{
+		// 		__RESET_WATCHDOG();
+		// 		second_ig=second_1s;
 
-				//SMG_Driver();
-
-
-
-				__RESET_WATCHDOG();	
-				scan();				/* 里程处理 */
-
-				__RESET_WATCHDOG();	
-				Can_Tx_Process();
-
-				__RESET_WATCHDOG();	
-				Key_Process();
+		// 		//SMG_Driver();
 
 
-				if((second_1s - second_501ms)>500)
-				{
-					second_501ms = second_1s;
-					//if(no_key_c<=250)no_key_c++;
-					//if(no_keyr_c<=250)no_keyr_c++;
+
+		// 		__RESET_WATCHDOG();	
+		// 		scan();				/* 里程处理 */
+
+		// 		__RESET_WATCHDOG();	
+		// 		Can_Tx_Process();
+
+		// 		__RESET_WATCHDOG();	
+		// 		Key_Process();
+
+
+		// 		if((second_1s - second_501ms)>500)
+		// 		{
+		// 			second_501ms = second_1s;
+		// 			//if(no_key_c<=250)no_key_c++;
+		// 			//if(no_keyr_c<=250)no_keyr_c++;
 					
-					if(ign_jsq<=250)				// 点火启动计数器，每500ms计数一次
-						ign_jsq++;
-				}
+		// 			if(ign_jsq<=250)				// 点火启动计数器，每500ms计数一次
+		// 				ign_jsq++;
+		// 		}
 				
 				
 				
-        		if((second_1s - second_100ms)>100)
-        		{
-        			second_100ms = second_1s;
-					Loop_500ms_Count++;
-					if(Loop_500ms_Count == 5)
-					{
-						Loop_500ms_Count = 0;
-						Loop_500ms = ~Loop_500ms;
-					}
+        // 		if((second_1s - second_100ms)>100)
+        // 		{
+        // 			second_100ms = second_1s;
+		// 			Loop_500ms_Count++;
+		// 			if(Loop_500ms_Count == 5)
+		// 			{
+		// 				Loop_500ms_Count = 0;
+		// 				Loop_500ms = ~Loop_500ms;
+		// 			}
 					
-					if(pro_start>0)			/* 开机自检结束后正常处理LED信号灯 */
-					{
-						LED_Process();
-					}
-		        	Receive_74CH165_Byte();
+		// 			if(pro_start>0)			/* 开机自检结束后正常处理LED信号灯 */
+		// 			{
+		// 				LED_Process();
+		// 			}
+		//         	Receive_74CH165_Byte();
 
-					//Buzzer_Manage();
-					//Receive_74CH165A_Byte();
-		        	//Receive_74CH165_Read_Byte_Test();
+		// 			//Buzzer_Manage();
+		// 			//Receive_74CH165A_Byte();
+		//         	//Receive_74CH165_Read_Byte_Test();
             
-        		}
+        // 		}
 
 
 				
-        		if((second_1s - second_20ms)>20)
-        		{   
-            		ADC_Process();
-                    lc_control();
-                    zs_control();
-					EngOilPress_Control();
-            		second_500s=second_1s;
-					CanLoss_Process();
+        // 		if((second_1s - second_20ms)>20)
+        // 		{   
+        //     		ADC_Process();
+        //             lc_control();
+        //             zs_control();
+		// 			EngOilPress_Control();
+        //     		second_500s=second_1s;
+		// 			CanLoss_Process();
 			        
 					
-            		//Smeter[Mc_Speed].inp
-                	//tachodata=sml_inp;
-            		LCD_DisplayProcess();
-        		}
-			}
-		}
+        //     		//Smeter[Mc_Speed].inp
+        //         	//tachodata=sml_inp;
+        //     		LCD_DisplayProcess();
+        // 		}
+		// 	}
+		// }
 		__RESET_WATCHDOG();	
   	}   					
 }

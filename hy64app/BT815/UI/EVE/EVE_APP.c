@@ -1715,7 +1715,7 @@ STATIC FTVOID appUI_EVEGPIOCfg ( FTVOID )
     /* mute sound to avoid pop sound */
     HAL_Write16(REG_SOUND,0x0060);
     HAL_Write8(REG_PLAY,0x01);
-    while(HAL_Read8(REG_PLAY));
+    //while(HAL_Read8(REG_PLAY));
 }
 
 /*
@@ -1927,9 +1927,23 @@ STATIC FTVOID appUI_EVELCDCfg ( FTVOID )
 //#define  VPW 0  //Vertical Sync Pulse Width = (VPW + 1) lines
 
 #elif defined(LCD_QVGA)
-        408,70,0,10, 
-        263,13,0, 2, 
-        8,2,0,1,1};
+        // 408,70,0,10, 
+        // 263,13,0, 2, 
+        // 8,2,0,1,1};
+        326,70,0,10, 
+        252,13,0, 2, 
+        8,2,0,1,1};        
+
+// #define  HT  252	  //Horizontal total period = (HT + 1) pixels
+// #define  HPS 4	  //Horizontal Sync Pulse Start Position = (HPS + 1) pixels	 		 
+// #define  LPS 2	  //Horizontal Display Period Start Position = LPS pixels		
+// #define  HPW 2   //Horizontal Sync Pulse Width = (HPW + 1) pixels	
+
+// #define  VT 326	 //Vertical Total = (VT + 1) lines
+// #define  VPS 4  //Vertical Sync Pulse Start Position = VPS lines					  
+// #define  FPS 0   //Vertical Display Period Start Position = FPS lines				  
+// #define  VPW 2  //Vertical Sync Pulse Width = (VPW + 1) lines
+
 #elif defined(LCD_HVGA)
         400,40,0,10, 
         500,10,0, 5, 
@@ -1943,13 +1957,13 @@ STATIC FTVOID appUI_EVELCDCfg ( FTVOID )
 #endif
 
     /* config the LCD related parameters */
-    HAL_Write16(REG_HSIZE, lcd.Width);  //800
-    HAL_Write16(REG_VSIZE, lcd.Height); //480
-    HAL_Write16(REG_HCYCLE, lcd.HCycle); //928
-    HAL_Write16(REG_HOFFSET, lcd.HOffset); //88
-    HAL_Write16(REG_HSYNC0, lcd.HSync0);   //0
-    HAL_Write16(REG_HSYNC1, lcd.HSync1);   //48
-    HAL_Write16(REG_VCYCLE, lcd.VCycle);   //525
+    HAL_Write16(REG_HSIZE, lcd.Width);  //800  240
+    HAL_Write16(REG_VSIZE, lcd.Height); //480  320
+    HAL_Write16(REG_HCYCLE, lcd.HCycle); //928 这些位是每次水平线扫描的总PCLK周期数
+    HAL_Write16(REG_HOFFSET, lcd.HOffset); //88 这些位用于指定像素被扫描之前的PCLK周期数
+    HAL_Write16(REG_HSYNC0, lcd.HSync0);   //0  这些位的值指定行开始期间HSYNC0的PCLK周期数
+    HAL_Write16(REG_HSYNC1, lcd.HSync1);   //48  这些位的值指定行开始期间HSYNC1的多少个PCLK周期
+    HAL_Write16(REG_VCYCLE, lcd.VCycle);   //525 这些位的值指定一帧中有多少行
     HAL_Write16(REG_VOFFSET, lcd.VOffset); //32
     HAL_Write16(REG_VSYNC0, lcd.VSync0);   //0
     HAL_Write16(REG_VSYNC1, lcd.VSync1);   //3
@@ -2069,7 +2083,7 @@ STATIC appRet_en appUI_WaitCal (FTVOID)
 //        } while (ret != APP_OK);
 //    }
 //#endif
-    appUI_EVEClnScrn();
+    //appUI_EVEClnScrn();
     return APP_OK; 
 }
 
@@ -2112,7 +2126,7 @@ FTVOID UI_INIT (FTVOID)
      if not, you will never read the ChipID
      there is some problem above (power, SPI, PD, CLK, etc.)
      */
-    #if 1
+    #if 0
 	
     if (!appUI_EVEVerify()) {
         ////__FTPRINT("\nEVE init fail");
@@ -2143,7 +2157,7 @@ FTVOID UI_INIT (FTVOID)
     /* 
      do the LCD HW related part here
      */
-    appUI_EVELCDCfg();
+    appUI_EVELCDCfg();  //设置分辨率参数
 
 	/*
 	clear the screen before enable the LCD

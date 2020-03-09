@@ -111,6 +111,7 @@ FTVOID ecar_getXYfrmCenter(FT16 Angle, FT16 Radius, FT16 *pX, FT16 *pY);
 
 #define SOC_d1_6_160x160_raw                    "EVEFLH@ 90368  : 179200" //SOC圈
 #define Power_e_200x200_raw                     "EVEFLH@ 277248 : 280000" //Power圈
+#define Blue_168x168_raw                        "EVEFLH@ 557248 : 28224"  //蓝圈
 // #define power_d7_96x40_raw                      "EVEFLH@ 242368 : 3840"  //灰色半圈
 // #define power_d8_96x40_raw                      "EVEFLH@ 246208 : 3840"  //灰色半圈
 
@@ -161,6 +162,7 @@ ImgInfo_st info_header1[] = {
     //{c6_seat_24x24_raw,   0, 0, 0},
     {SOC_d1_6_160x160_raw,  0, 0, 0},
     {Power_e_200x200_raw,   0, 0, 0},
+    {Blue_168x168_raw,   0, 0, 0},
     // {power_c7_160x160_raw,   0, 0, 0},
     // {ready_80x32_raw,   0, 0, 0},
     // {warn_28x24_raw,    0,0,0 },
@@ -175,6 +177,7 @@ typedef enum EDISP_INX_ {
         EDISP_INX_Seat24x24,
         EDISP_INX_SOC160X160,
         EDISP_INX_Power200X200,
+        EDISP_INX_Blue168X168,
 		EDISP_HDL_MAX		
 }EDISPINX_E;
 		
@@ -188,6 +191,7 @@ bmpHDR_st bmp_header1[] =
     //{COMPRESSED_RGBA_ASTC_4x4_KHR,28,28,(FTU32)&info_header1[EDISP_INX_Seat24x24]},
     {COMPRESSED_RGBA_ASTC_4x4_KHR,160,160,(FTU32)&info_header1[EDISP_INX_SOC160X160]},
     {COMPRESSED_RGBA_ASTC_4x4_KHR,200,200,(FTU32)&info_header1[EDISP_INX_Power200X200]},
+    {COMPRESSED_RGBA_ASTC_4x4_KHR,168,168,(FTU32)&info_header1[EDISP_INX_Blue168X168]},
 };
 
 
@@ -534,15 +538,17 @@ FTVOID Dis_SOC(FTU16 data)
     HAL_CmdBufIn(CELL(5));
     HAL_CmdBufIn(SAVE_CONTEXT());
 	HAL_CmdBufIn(BITMAP_SIZE(BILINEAR,BORDER,BORDER,160,160)); //width height
-	HAL_CmdBufIn(VERTEX2F(46*EVE_PIXEL_UNIT,90*EVE_PIXEL_UNIT));  //起始位置    
+	HAL_CmdBufIn(VERTEX2F(44*EVE_PIXEL_UNIT,88*EVE_PIXEL_UNIT));  //起始位置    
     HAL_CmdBufIn(RESTORE_CONTEXT());
-
-    if(data<=50) //黑色层
+    data/=2;
+    if(data!=25)
+    {
+    if(data<25) //黑色层
     {
         HAL_CmdBufIn(BITMAP_HANDLE(EDISP_INX_SOC160X160));
         HAL_CmdBufIn(CELL(6));
         CoCmd_LOADIDENTITY;	//设置身份
-        CoCmd_ROTATEAROUND(80 ,80, (data*36)*EVE_TRANSFORM_MAX/3600,EVE_TRANSFORM_MAX);  //旋转中心坐标 旋转角度
+        CoCmd_ROTATEAROUND(80 ,80, (data*72)*EVE_TRANSFORM_MAX/3600,EVE_TRANSFORM_MAX);  //旋转中心坐标 旋转角度
         CoCmd_SETMATRIX; //把当前图像转为位图显示
     }
     else
@@ -550,20 +556,20 @@ FTVOID Dis_SOC(FTU16 data)
         HAL_CmdBufIn(BITMAP_HANDLE(EDISP_INX_SOC160X160));
         HAL_CmdBufIn(CELL(6));
         CoCmd_LOADIDENTITY;	//设置身份
-        CoCmd_ROTATEAROUND(80 ,80, (data*36-1800)*EVE_TRANSFORM_MAX/3600,EVE_TRANSFORM_MAX);  //旋转中心坐标 旋转角度
+        CoCmd_ROTATEAROUND(80 ,80, (data*72-1800)*EVE_TRANSFORM_MAX/3600,EVE_TRANSFORM_MAX);  //旋转中心坐标 旋转角度
         CoCmd_SETMATRIX; //把当前图像转为位图显示
     }
     HAL_CmdBufIn(SAVE_CONTEXT());
 	HAL_CmdBufIn(BITMAP_SIZE(BILINEAR,BORDER,BORDER,160,160)); //width height
-	HAL_CmdBufIn(VERTEX2F(46*EVE_PIXEL_UNIT,90*EVE_PIXEL_UNIT));  //起始位置    
+	HAL_CmdBufIn(VERTEX2F(44*EVE_PIXEL_UNIT,88*EVE_PIXEL_UNIT));  //起始位置    
     HAL_CmdBufIn(RESTORE_CONTEXT());
 
-    if(data<=50) //灰色/绿色层
+    if(data<25) //灰色/绿色层
     {
         HAL_CmdBufIn(BITMAP_HANDLE(EDISP_INX_SOC160X160));
         HAL_CmdBufIn(CELL(3));
         CoCmd_LOADIDENTITY;	//设置身份
-        CoCmd_ROTATEAROUND(80 ,80, data*36*EVE_TRANSFORM_MAX/3600,EVE_TRANSFORM_MAX);  //旋转中心坐标 旋转角度
+        CoCmd_ROTATEAROUND(80 ,80, data*72*EVE_TRANSFORM_MAX/3600,EVE_TRANSFORM_MAX);  //旋转中心坐标 旋转角度
         CoCmd_SETMATRIX; //把当前图像转为位图显示
     }
     else
@@ -571,29 +577,27 @@ FTVOID Dis_SOC(FTU16 data)
         HAL_CmdBufIn(BITMAP_HANDLE(EDISP_INX_SOC160X160));
         HAL_CmdBufIn(CELL(4));
         CoCmd_LOADIDENTITY;	//设置身份
-        CoCmd_ROTATEAROUND(80 ,80, (data*36-1800)*EVE_TRANSFORM_MAX/3600,EVE_TRANSFORM_MAX);  //旋转中心坐标 旋转角度
+        CoCmd_ROTATEAROUND(80 ,80, (data*72-1800)*EVE_TRANSFORM_MAX/3600,EVE_TRANSFORM_MAX);  //旋转中心坐标 旋转角度
         CoCmd_SETMATRIX; //把当前图像转为位图显示
     }
-
-    //Push the current graphics context on the context stack
     HAL_CmdBufIn(SAVE_CONTEXT());
 	HAL_CmdBufIn(BITMAP_SIZE(BILINEAR,BORDER,BORDER,160,160)); //width height
-	HAL_CmdBufIn(VERTEX2F(46*EVE_PIXEL_UNIT,90*EVE_PIXEL_UNIT));  //起始位置    
+	HAL_CmdBufIn(VERTEX2F(44*EVE_PIXEL_UNIT,88*EVE_PIXEL_UNIT));  //起始位置    
     HAL_CmdBufIn(RESTORE_CONTEXT());
+    }
     #endif 
 }
 
 //功率圈显示
 FTVOID Dis_Power(FT16 data)
 {
-    /**************************0-100(data+1 转2°)*********************************/
-    HAL_CmdBufIn(BITMAP_HANDLE(EDISP_INX_Power200X200));  //白色进度条
-    HAL_CmdBufIn(CELL(0));
-	HAL_CmdBufIn(BITMAP_SIZE(BILINEAR,BORDER,BORDER,200,200)); //width height
-	HAL_CmdBufIn(VERTEX2F(24*EVE_PIXEL_UNIT,68*EVE_PIXEL_UNIT));  //起始位置    
-
     if(data>0)
     {
+        /**************************0-100(data+1 转2°)*********************************/
+        HAL_CmdBufIn(BITMAP_HANDLE(EDISP_INX_Power200X200));  //白色进度条
+        HAL_CmdBufIn(CELL(0));
+        HAL_CmdBufIn(BITMAP_SIZE(BILINEAR,BORDER,BORDER,200,200)); //width height
+        HAL_CmdBufIn(VERTEX2F(24*EVE_PIXEL_UNIT,68*EVE_PIXEL_UNIT));  //起始位置    
         if(data<=20)
         {
             HAL_CmdBufIn(CELL(1)); //黑色遮盖条0-20
@@ -641,20 +645,21 @@ FTVOID Dis_Power(FT16 data)
     else
     {
         /**************************-100-0*********************************/
-        HAL_CmdBufIn(CELL(1)); //黑色遮盖条0-20
-        CoCmd_LOADIDENTITY;	
-        CoCmd_ROTATEAROUND(100 ,100, 0,EVE_TRANSFORM_MAX);  //旋转中心坐标 旋转角度
-        CoCmd_SETMATRIX;
-        HAL_CmdBufIn(BITMAP_SIZE(BILINEAR,BORDER,BORDER,200,200)); //width height
-        HAL_CmdBufIn(VERTEX2F(24*EVE_PIXEL_UNIT,68*EVE_PIXEL_UNIT));  //起始位置
+         HAL_CmdBufIn(BITMAP_HANDLE(EDISP_INX_Power200X200));  
+        // HAL_CmdBufIn(CELL(1)); //黑色遮盖条0-20
+        // CoCmd_LOADIDENTITY;	
+        // CoCmd_ROTATEAROUND(100 ,100, 0,EVE_TRANSFORM_MAX);  //旋转中心坐标 旋转角度
+        // CoCmd_SETMATRIX;
+        // HAL_CmdBufIn(BITMAP_SIZE(BILINEAR,BORDER,BORDER,200,200)); //width height
+        // HAL_CmdBufIn(VERTEX2F(24*EVE_PIXEL_UNIT,68*EVE_PIXEL_UNIT));  //起始位置
 
-        HAL_CmdBufIn(CELL(2)); //黑色遮盖条21-60
-        HAL_CmdBufIn(BITMAP_SIZE(BILINEAR,BORDER,BORDER,200,200)); //width height
-        HAL_CmdBufIn(VERTEX2F(24*EVE_PIXEL_UNIT,68*EVE_PIXEL_UNIT));  //起始位置
+        // HAL_CmdBufIn(CELL(2)); //黑色遮盖条21-60
+        // HAL_CmdBufIn(BITMAP_SIZE(BILINEAR,BORDER,BORDER,200,200)); //width height
+        // HAL_CmdBufIn(VERTEX2F(24*EVE_PIXEL_UNIT,68*EVE_PIXEL_UNIT));  //起始位置
 
-        HAL_CmdBufIn(CELL(3)); //黑色遮盖条61-100
-        HAL_CmdBufIn(BITMAP_SIZE(BILINEAR,BORDER,BORDER,200,200)); //width height
-        HAL_CmdBufIn(VERTEX2F(24*EVE_PIXEL_UNIT,68*EVE_PIXEL_UNIT));  //起始位置
+        // HAL_CmdBufIn(CELL(3)); //黑色遮盖条61-100
+        // HAL_CmdBufIn(BITMAP_SIZE(BILINEAR,BORDER,BORDER,200,200)); //width height
+        // HAL_CmdBufIn(VERTEX2F(24*EVE_PIXEL_UNIT,68*EVE_PIXEL_UNIT));  //起始位置
 
         HAL_CmdBufIn(CELL(4)); //绿色进度条
         HAL_CmdBufIn(BITMAP_SIZE(BILINEAR,BORDER,BORDER,200,200)); //width height
@@ -671,21 +676,6 @@ FTVOID Dis_Power(FT16 data)
 
     }
     
-
-
-    // HAL_CmdBufIn(CELL(4)); //绿色进度条
-	// HAL_CmdBufIn(BITMAP_SIZE(BILINEAR,BORDER,BORDER,200,200)); //width height
-	// HAL_CmdBufIn(VERTEX2F(24*EVE_PIXEL_UNIT,68*EVE_PIXEL_UNIT));  //起始位置   
-
-    // HAL_CmdBufIn(CELL(5)); //黑色遮盖条
-    // CoCmd_LOADIDENTITY;	
-    // CoCmd_ROTATEAROUND(100 ,100,10*EVE_TRANSFORM_MAX/360,EVE_TRANSFORM_MAX);  //旋转中心坐标 旋转角度
-    // CoCmd_SETMATRIX; //把当前图像转为位图显示
-    // HAL_CmdBufIn(SAVE_CONTEXT());
-	// HAL_CmdBufIn(BITMAP_SIZE(BILINEAR,BORDER,BORDER,200,200)); //width height
-	// HAL_CmdBufIn(VERTEX2F(25*EVE_PIXEL_UNIT,69*EVE_PIXEL_UNIT));  //起始位置 
-    // HAL_CmdBufIn(RESTORE_CONTEXT());
-
     /**************************外数值框*********************************/
     HAL_CmdBufIn(BITMAP_HANDLE(EDISP_INX_Power200X200));  //数值外框
     HAL_CmdBufIn(CELL(6));
@@ -694,7 +684,17 @@ FTVOID Dis_Power(FT16 data)
     CoCmd_SETMATRIX; //把当前图像转为位图显示
     HAL_CmdBufIn(SAVE_CONTEXT());
 	HAL_CmdBufIn(BITMAP_SIZE(BILINEAR,BORDER,BORDER,200,200)); //width height
-	HAL_CmdBufIn(VERTEX2F(18*EVE_PIXEL_UNIT,77*EVE_PIXEL_UNIT));  //起始位置    
+	HAL_CmdBufIn(VERTEX2F(19*EVE_PIXEL_UNIT,76*EVE_PIXEL_UNIT));  //起始位置    
+    HAL_CmdBufIn(RESTORE_CONTEXT());
+        
+    HAL_CmdBufIn(BITMAP_HANDLE(EDISP_INX_Blue168X168));  //蓝色外框
+    HAL_CmdBufIn(CELL(0));
+    // CoCmd_LOADIDENTITY;	
+    // CoCmd_ROTATEAROUND(100 ,100, 0*EVE_TRANSFORM_MAX/360,EVE_TRANSFORM_MAX);  //这里设置为0度 不然会受上面的影响
+    // CoCmd_SETMATRIX; //把当前图像转为位图显示
+    HAL_CmdBufIn(SAVE_CONTEXT());
+	HAL_CmdBufIn(BITMAP_SIZE(BILINEAR,BORDER,BORDER,200,200)); //width height
+	HAL_CmdBufIn(VERTEX2F(40*EVE_PIXEL_UNIT,84*EVE_PIXEL_UNIT));  //起始位置    
     HAL_CmdBufIn(RESTORE_CONTEXT());
 }
 //温度显示
@@ -810,8 +810,8 @@ void DispTest(unsigned int data,unsigned char stu)
         else
             Dis_Power(-ss);
         
-       // Dis_SOC(yg_test);
-       Dis_SOC(ss);
+        //Dis_SOC(yg_test);
+        Dis_SOC(ss);
  
         
         yytest++;
